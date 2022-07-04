@@ -1,12 +1,19 @@
 from flask import render_template,request,jsonify,make_response
 from flask_bcrypt import Bcrypt
-from crud import app
+from crud import app,mail
 from .model import signUp
 import jwt
-import json
+from flask_mail import Message
 bcrypt = Bcrypt(app)
 
 app.config['SECRET_KEY']="secret_key"
+
+
+def email(user):
+   msg = Message('Checking mail server', sender = 'sahtika@gmail.com', recipients = ['tikasah84@gmail.com'])
+   msg.body = "Hello "+user+" message sent from Flask-Mail"
+   mail.send(msg)
+   return True
 
 @app.route('/')
 def index():
@@ -29,10 +36,10 @@ def register():
                         if check:
                             for user in check:
                                 if user.Username == data['Username']:
-                                    return jsonify({"msg":"Username is already in use"})
-                                else:
-                                    obj.save()
-                                    return jsonify(obj)
+                                    return jsonify({"msg":"Username is already in use"}) 
+                            obj.save()
+                            mailcheck = email(data['Username'])
+                            return jsonify(obj,mailcheck)
                         else:
                             obj.save()
                             return jsonify(obj)
@@ -63,6 +70,8 @@ def login():
                                 return make_response(token)
                             else:
                                 return jsonify({"msg":"Password doesn't match"})
+                        else:
+                             return jsonify({"msg":" User Not found"})
                 else:
                     return jsonify({"msg":"No user found"})
             else:
@@ -98,6 +107,10 @@ def logout(user):
 def alluser():
     users=signUp.objects.all()
     return jsonify(users)
+
+
+
+
   
     
 
